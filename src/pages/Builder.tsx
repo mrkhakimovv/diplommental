@@ -3,6 +3,8 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Certificate, CertificateData, latToCyr } from '../components/Certificate';
 import { Download, Share2, CheckCircle2, FileDown, Edit3, Database, Save, Trash2, X } from 'lucide-react';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function Builder() {
   const [data, setData] = useState<CertificateData>({
@@ -20,36 +22,58 @@ export default function Builder() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showCyrillic, setShowCyrillic] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [savedCerts, setSavedCerts] = useState<CertificateData[]>([]);
+  const [savedCerts, setSavedCerts] = useState<any[]>([]);
   const [showDatabase, setShowDatabase] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('diploma_database');
-    if (saved) {
-      try {
-        setSavedCerts(JSON.parse(saved));
-      } catch(e) {}
-    }
+    const unsubscribe = onSnapshot(collection(db, 'diplomas'), (snapshot) => {
+      const diplomas = snapshot.docs.map(doc => ({
+        _dbId: doc.id,
+        ...doc.data()
+      }));
+      setSavedCerts(diplomas.sort((a: any, b: any) => b.createdAt - a.createdAt));
+    }, (error) => {
+      console.error("Firestore Error: ", error);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const handleSaveToDatabase = () => {
-    const newCert = { ...data, _dbId: Date.now().toString() };
-    const newCerts = [...savedCerts, newCert];
-    setSavedCerts(newCerts);
-    localStorage.setItem('diploma_database', JSON.stringify(newCerts));
-    setShowSavedToast(true);
-    setTimeout(() => setShowSavedToast(false), 3000);
+  const handleSaveToDatabase = async () => {
+    try {
+      if (data._dbId) {
+        await updateDoc(doc(db, 'diplomas', data._dbId), {
+           ...data,
+           updatedAt: Date.now()
+        });
+      } else {
+        const docRef = await addDoc(collection(db, 'diplomas'), {
+          ...data,
+          createdAt: Date.now()
+        });
+        setData({ ...data, _dbId: docRef.id });
+      }
+      setShowSavedToast(true);
+      setTimeout(() => setShowSavedToast(false), 3000);
+    } catch (e) {
+      console.error(e);
+      alert("Xatolik yuz berdi");
+    }
   };
 
-  const handleDeleteFromDatabase = (index: number) => {
-    const newCerts = savedCerts.filter((_, i) => i !== index);
-    setSavedCerts(newCerts);
-    localStorage.setItem('diploma_database', JSON.stringify(newCerts));
+  const handleDeleteFromDatabase = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if(confirm("Ushbu diplomni o'chirib yuborishni xohlaysizmi?")) {
+      try {
+        await deleteDoc(doc(db, 'diplomas', id));
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
 
-  const handleLoadFromDatabase = (cert: CertificateData) => {
+  const handleLoadFromDatabase = (cert: any) => {
     setData(cert);
     setShowDatabase(false);
   };
@@ -474,7 +498,7 @@ export default function Builder() {
                             <Edit3 size={18} />
                           </button>
                           <button 
-                            onClick={(e) => { e.stopPropagation(); handleDeleteFromDatabase(index); }} 
+                            onClick={(e) => handleDeleteFromDatabase(cert._dbId, e)} 
                             className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="O'chirish"
                           >

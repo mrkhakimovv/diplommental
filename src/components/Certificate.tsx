@@ -19,6 +19,7 @@ export interface CertificateData {
   secretary?: string;
   directorCyr?: string;
   secretaryCyr?: string;
+  _dbId?: string;
 }
 
 export const latToCyr = (text: string) => {
@@ -45,7 +46,7 @@ const monthsUz = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "a
 const monthsCyr = ["январ", "феврал", "март", "апрел", "май", "июн", "июл", "август", "сентябр", "октябр", "ноябр", "декабр"];
 
 export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
-  ({ firstName, lastName, patronymic, course, duration, date, certId, firstNameCyr, lastNameCyr, patronymicCyr, courseCyr, durationCyr, director = 'A. Alimov', secretary = 'S. Qodirova', directorCyr, secretaryCyr }, ref) => {
+  ({ firstName, lastName, patronymic, course, duration, date, certId, firstNameCyr, lastNameCyr, patronymicCyr, courseCyr, durationCyr, director = 'A. Alimov', secretary = 'S. Qodirova', directorCyr, secretaryCyr, _dbId }, ref) => {
     const params: Record<string, string> = {};
     if (firstName) params.firstName = firstName;
     if (lastName) params.lastName = lastName;
@@ -66,7 +67,7 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
 
     const origin = process.env.APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://diplom.app');
     const queryParams = new URLSearchParams(params);
-    const verifyUrl = `${origin}/view?${queryParams.toString()}`;
+    const verifyUrl = _dbId ? `${origin}/view/${_dbId}` : `${origin}/view?${queryParams.toString()}`;
 
     const parsedDate = date ? new Date(date) : new Date();
     const day = parsedDate.getDate();

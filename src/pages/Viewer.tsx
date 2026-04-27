@@ -1,41 +1,71 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, useParams, Link } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Certificate, CertificateData } from '../components/Certificate';
 import { Download, AlertCircle, Home, FileCheck2, FileDown } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function Viewer() {
   const [searchParams] = useSearchParams();
+  const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<CertificateData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const checkData: CertificateData = {
-      firstName: searchParams.get('firstName') || '',
-      lastName: searchParams.get('lastName') || '',
-      patronymic: searchParams.get('patronymic') || '',
-      course: searchParams.get('course') || '',
-      duration: searchParams.get('duration') || '',
-      date: searchParams.get('date') || '',
-      certId: searchParams.get('certId') || '',
-      firstNameCyr: searchParams.get('firstNameCyr') || undefined,
-      lastNameCyr: searchParams.get('lastNameCyr') || undefined,
-      patronymicCyr: searchParams.get('patronymicCyr') || undefined,
-      courseCyr: searchParams.get('courseCyr') || undefined,
-      durationCyr: searchParams.get('durationCyr') || undefined,
-      director: searchParams.get('director') || 'A. Alimov',
-      secretary: searchParams.get('secretary') || 'S. Qodirova',
-      directorCyr: searchParams.get('directorCyr') || undefined,
-      secretaryCyr: searchParams.get('secretaryCyr') || undefined
+    const fetchCertificate = async () => {
+      if (id) {
+        setIsLoading(true);
+        try {
+          const docRef = doc(db, 'diplomas', id);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setData(docSnap.data() as CertificateData);
+          } else {
+            setData(null);
+          }
+        } catch (error) {
+          console.error("Error fetching certificate:", error);
+          setData(null);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        const checkData: CertificateData = {
+          firstName: searchParams.get('firstName') || '',
+          lastName: searchParams.get('lastName') || '',
+          patronymic: searchParams.get('patronymic') || '',
+          course: searchParams.get('course') || '',
+          duration: searchParams.get('duration') || '',
+          date: searchParams.get('date') || '',
+          certId: searchParams.get('certId') || '',
+          firstNameCyr: searchParams.get('firstNameCyr') || undefined,
+          lastNameCyr: searchParams.get('lastNameCyr') || undefined,
+          patronymicCyr: searchParams.get('patronymicCyr') || undefined,
+          courseCyr: searchParams.get('courseCyr') || undefined,
+          durationCyr: searchParams.get('durationCyr') || undefined,
+          director: searchParams.get('director') || 'A. Alimov',
+          secretary: searchParams.get('secretary') || 'S. Qodirova',
+          directorCyr: searchParams.get('directorCyr') || undefined,
+          secretaryCyr: searchParams.get('secretaryCyr') || undefined
+        };
+        
+        // Validating if basic data exists to render something meaningful
+        if (checkData.firstName || checkData.lastName || checkData.course || checkData.certId) {
+            setData(checkData);
+        } else {
+            setData(null);
+        }
+        setIsLoading(false);
+      }
     };
-    
-    // Validating if basic data exists to render something meaningful
-    if (checkData.firstName || checkData.lastName || checkData.course || checkData.certId) {
-        setData(checkData);
-    }
-  }, [searchParams]);
+
+    fetchCertificate();
+  }, [searchParams, id]);
+
 
   const handleDownload = async () => {
     if (certRef.current && data) {
@@ -103,6 +133,17 @@ export default function Viewer() {
       }
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
+        <div className="flex flex-col items-center">
+           <div className="h-8 w-8 border-4 border-slate-300 border-t-slate-900 rounded-full animate-spin mb-4" />
+           <p className="text-slate-600 font-medium">Diplom yuklanmoqda...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!data) {
      return (
