@@ -24,7 +24,11 @@ export default function Viewer() {
       lastNameCyr: searchParams.get('lastNameCyr') || undefined,
       patronymicCyr: searchParams.get('patronymicCyr') || undefined,
       courseCyr: searchParams.get('courseCyr') || undefined,
-      durationCyr: searchParams.get('durationCyr') || undefined
+      durationCyr: searchParams.get('durationCyr') || undefined,
+      director: searchParams.get('director') || 'A. Alimov',
+      secretary: searchParams.get('secretary') || 'S. Qodirova',
+      directorCyr: searchParams.get('directorCyr') || undefined,
+      secretaryCyr: searchParams.get('secretaryCyr') || undefined
     };
     
     // Validating if basic data exists to render something meaningful

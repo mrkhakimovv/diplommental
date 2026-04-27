@@ -13,6 +13,8 @@ export default function Builder() {
     duration: '1 (bir) oylik',
     date: new Date().toISOString().split('T')[0],
     certId: '2026191',
+    director: 'A. Alimov',
+    secretary: 'S. Qodirova',
   });
   
   const [copiedLink, setCopiedLink] = useState(false);
@@ -105,6 +107,10 @@ export default function Builder() {
     if (data.patronymicCyr) params.patronymicCyr = data.patronymicCyr;
     if (data.courseCyr) params.courseCyr = data.courseCyr;
     if (data.durationCyr) params.durationCyr = data.durationCyr;
+    if (data.director) params.director = data.director;
+    if (data.secretary) params.secretary = data.secretary;
+    if (data.directorCyr) params.directorCyr = data.directorCyr;
+    if (data.secretaryCyr) params.secretaryCyr = data.secretaryCyr;
 
     const queryParams = new URLSearchParams(params);
     const origin = process.env.APP_URL || window.location.origin;
@@ -212,6 +218,28 @@ export default function Builder() {
           </div>
           
           <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rahbariyat</label>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                name="director" 
+                value={data.director}
+                onChange={handleChange}
+                placeholder="Direktor"
+                className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
+              />
+              <input 
+                type="text" 
+                name="secretary" 
+                value={data.secretary}
+                onChange={handleChange}
+                placeholder="Kotib"
+                className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
+              />
+            </div>
+          </div>
+          
+          <div>
             <label className="flex items-center cursor-pointer mb-2">
               <input 
                 type="checkbox" 
@@ -254,7 +282,7 @@ export default function Builder() {
                     className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm outline-none mb-2"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-2">
                   <input 
                     type="text" 
                     name="durationCyr" 
@@ -270,6 +298,24 @@ export default function Builder() {
                     onChange={handleChange}
                     placeholder="Ментал арифметика"
                     className="w-2/3 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    name="directorCyr" 
+                    value={data.directorCyr !== undefined ? data.directorCyr : latToCyr(data.director || '')}
+                    onChange={handleChange}
+                    placeholder="Директор (Kiril)"
+                    className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                  />
+                  <input 
+                    type="text" 
+                    name="secretaryCyr" 
+                    value={data.secretaryCyr !== undefined ? data.secretaryCyr : latToCyr(data.secretary || '')}
+                    onChange={handleChange}
+                    placeholder="Котиб (Kiril)"
+                    className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
                   />
                 </div>
               </div>

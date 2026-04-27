@@ -15,6 +15,10 @@ export interface CertificateData {
   patronymicCyr?: string;
   courseCyr?: string;
   durationCyr?: string;
+  director?: string;
+  secretary?: string;
+  directorCyr?: string;
+  secretaryCyr?: string;
 }
 
 export const latToCyr = (text: string) => {
@@ -41,7 +45,7 @@ const monthsUz = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "a
 const monthsCyr = ["январ", "феврал", "март", "апрел", "май", "июн", "июл", "август", "сентябр", "октябр", "ноябр", "декабр"];
 
 export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
-  ({ firstName, lastName, patronymic, course, duration, date, certId, firstNameCyr, lastNameCyr, patronymicCyr, courseCyr, durationCyr }, ref) => {
+  ({ firstName, lastName, patronymic, course, duration, date, certId, firstNameCyr, lastNameCyr, patronymicCyr, courseCyr, durationCyr, director = 'A. Alimov', secretary = 'S. Qodirova', directorCyr, secretaryCyr }, ref) => {
     const params: Record<string, string> = {};
     if (firstName) params.firstName = firstName;
     if (lastName) params.lastName = lastName;
@@ -50,6 +54,15 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
     if (duration) params.duration = duration;
     if (date) params.date = date;
     if (certId) params.certId = certId;
+    if (firstNameCyr) params.firstNameCyr = firstNameCyr;
+    if (lastNameCyr) params.lastNameCyr = lastNameCyr;
+    if (patronymicCyr) params.patronymicCyr = patronymicCyr;
+    if (courseCyr) params.courseCyr = courseCyr;
+    if (durationCyr) params.durationCyr = durationCyr;
+    if (director) params.director = director;
+    if (secretary) params.secretary = secretary;
+    if (directorCyr) params.directorCyr = directorCyr;
+    if (secretaryCyr) params.secretaryCyr = secretaryCyr;
 
     const origin = process.env.APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://diplom.app');
     const queryParams = new URLSearchParams(params);
@@ -125,13 +138,13 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Direktor:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>A. Alimov</span>
+                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{director}</span>
                      </div>
                  </div>
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Kotib:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>S. Qodirova</span>
+                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{secretary}</span>
                      </div>
                  </div>
              </div>
@@ -212,13 +225,13 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Директор:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>А. Алимов</span>
+                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{typeof directorCyr === 'string' && directorCyr.trim() !== '' ? directorCyr : latToCyr(director)}</span>
                      </div>
                  </div>
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Котиб:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>С. Қодирова</span>
+                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{typeof secretaryCyr === 'string' && secretaryCyr.trim() !== '' ? secretaryCyr : latToCyr(secretary)}</span>
                      </div>
                  </div>
              </div>
