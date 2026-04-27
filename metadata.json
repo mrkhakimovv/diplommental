@@ -1,0 +1,6 @@
+{
+  "name": "Diplom Generator",
+  "description": "Maxsus shablon asosida diplom yaratish, QR kod qo'shish va uning orqali yuklab olish imkonini beruvchi tizim.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
