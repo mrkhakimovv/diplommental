@@ -177,7 +177,7 @@ export default function Viewer() {
        </div>
 
        <p className="text-slate-500 text-sm mt-8 mx-auto text-center max-w-lg">
-           Yuqoridagi "Yuklab Olish" tugmasi orqali ushbu diplomning asl nusxasini mobil qurilmangizga yoki kompyuteringizga PNG formatida saqlab olishingiz mumkin.
+           Yuqoridagi "Yuklab Olish" tugmalari orqali ushbu diplomning asl nusxasini mobil qurilmangizga yoki kompyuteringizga PDF yoxud PNG formatida saqlab olishingiz mumkin.
        </p>
     </div>
   );

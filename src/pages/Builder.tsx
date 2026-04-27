@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Certificate, CertificateData, latToCyr } from '../components/Certificate';
-import { Download, Share2, CheckCircle2, FileDown, Edit3 } from 'lucide-react';
+import { Download, Share2, CheckCircle2, FileDown, Edit3, Database, Save, Trash2, X } from 'lucide-react';
 
 export default function Builder() {
   const [data, setData] = useState<CertificateData>({
@@ -20,7 +20,40 @@ export default function Builder() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showCyrillic, setShowCyrillic] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [savedCerts, setSavedCerts] = useState<CertificateData[]>([]);
+  const [showDatabase, setShowDatabase] = useState(false);
+  const [showSavedToast, setShowSavedToast] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('diploma_database');
+    if (saved) {
+      try {
+        setSavedCerts(JSON.parse(saved));
+      } catch(e) {}
+    }
+  }, []);
+
+  const handleSaveToDatabase = () => {
+    const newCert = { ...data, _dbId: Date.now().toString() };
+    const newCerts = [...savedCerts, newCert];
+    setSavedCerts(newCerts);
+    localStorage.setItem('diploma_database', JSON.stringify(newCerts));
+    setShowSavedToast(true);
+    setTimeout(() => setShowSavedToast(false), 3000);
+  };
+
+  const handleDeleteFromDatabase = (index: number) => {
+    const newCerts = savedCerts.filter((_, i) => i !== index);
+    setSavedCerts(newCerts);
+    localStorage.setItem('diploma_database', JSON.stringify(newCerts));
+  };
+
+  const handleLoadFromDatabase = (cert: CertificateData) => {
+    setData(cert);
+    setShowDatabase(false);
+  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({ ...data, [e.target.name]: e.target.value });
@@ -368,8 +401,22 @@ export default function Builder() {
       </div>
 
       {/* Preview Area */}
-      <div className="flex-1 flex flex-col items-center justify-center space-y-8 bg-slate-100 p-8 overflow-hidden">
-         <div className="w-full flex justify-center pb-8 overflow-x-auto items-center min-h-[750px] px-4">
+      <div className="flex-1 relative flex flex-col items-center justify-center space-y-8 bg-slate-100 p-8 overflow-hidden">
+         <div className="absolute z-40 top-4 right-4 flex gap-2 items-center">
+           {showSavedToast && (
+             <span className="text-green-600 bg-green-50 px-3 py-1.5 rounded-md text-sm font-medium mr-2 animate-pulse">
+               Muvaffaqiyatli saqlandi!
+             </span>
+           )}
+           <button onClick={handleSaveToDatabase} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm text-sm font-semibold hover:bg-slate-50 transition-colors text-slate-700 hover:shadow-md">
+             <Save size={16} /> Saqlash
+           </button>
+           <button onClick={() => setShowDatabase(true)} className="flex items-center gap-2 bg-slate-900 border border-slate-900 px-4 py-2 rounded-lg shadow-sm text-sm font-semibold hover:bg-slate-800 transition-colors hover:shadow-md text-white">
+             <Database size={16} /> Diplomlar Bazasi
+           </button>
+         </div>
+
+         <div className="w-full flex justify-center pb-8 overflow-x-auto items-center min-h-[750px] px-4 pt-16">
             <div className="transform scale-[0.4] sm:scale-50 md:scale-[0.6] lg:scale-[0.8] xl:scale-90 origin-center transition-transform">
                {/* Fixed dimensions ensure standard print quality */}
                <div style={{ width: '1000px', height: '700px' }}>
@@ -378,6 +425,71 @@ export default function Builder() {
             </div>
          </div>
       </div>
+
+      {showDatabase && (
+        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+            <div className="p-5 border-b border-slate-200 flex justify-between items-center">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-slate-900">
+                <Database className="text-slate-500" /> Diplomlar Bazasi
+              </h3>
+              <button onClick={() => setShowDatabase(false)} className="text-slate-400 hover:text-slate-600 transition-colors p-2 hover:bg-slate-100 rounded-full">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-0 overflow-y-auto flex-1">
+              {savedCerts.length === 0 ? (
+                <div className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
+                  <Database size={48} className="text-slate-300 mb-4" />
+                  Hozircha saqlangan diplomlar yo'q.
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-50 sticky top-0 shadow-sm z-10">
+                    <tr>
+                      <th className="p-4 border-b font-semibold text-slate-600 text-sm">ID</th>
+                      <th className="p-4 border-b font-semibold text-slate-600 text-sm">F.I.O</th>
+                      <th className="p-4 border-b font-semibold text-slate-600 text-sm">Yo'nalish</th>
+                      <th className="p-4 border-b font-semibold text-slate-600 text-sm">Sana</th>
+                      <th className="p-4 border-b font-semibold text-slate-600 text-sm w-32 text-right">Amallar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {savedCerts.map((cert: any, index: number) => (
+                      <tr 
+                        key={cert._dbId || index} 
+                        onClick={() => handleLoadFromDatabase(cert)}
+                        className="border-b hover:bg-slate-50 transition-colors cursor-pointer"
+                      >
+                        <td className="p-4 text-sm font-mono text-slate-600">{cert.certId}</td>
+                        <td className="p-4 font-medium text-slate-800">{cert.lastName} {cert.firstName}</td>
+                        <td className="p-4 text-slate-600 text-sm">{cert.course}</td>
+                        <td className="p-4 text-sm text-slate-500">{cert.date}</td>
+                        <td className="p-4 text-right flex justify-end gap-2">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleLoadFromDatabase(cert); }} 
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            title="Tahrirlash uchun yuklash"
+                          >
+                            <Edit3 size={18} />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteFromDatabase(index); }} 
+                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="O'chirish"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
