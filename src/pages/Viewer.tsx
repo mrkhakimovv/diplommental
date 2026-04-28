@@ -13,6 +13,7 @@ export default function Viewer() {
   const [data, setData] = useState<CertificateData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [autoDownloaded, setAutoDownloaded] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,6 +134,17 @@ export default function Viewer() {
       }
     }
   };
+
+  useEffect(() => {
+    if (data && !autoDownloaded && !isLoading) {
+      const timer = setTimeout(() => {
+        handleDownloadPDF();
+        setAutoDownloaded(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, autoDownloaded, isLoading]);
 
   if (isLoading) {
     return (
