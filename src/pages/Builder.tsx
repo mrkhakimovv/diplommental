@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Certificate, CertificateData, latToCyr } from '../components/Certificate';
-import { Download, Share2, CheckCircle2, FileDown, Edit3, Database, Save, Trash2, X } from 'lucide-react';
+import { Download, Share2, CheckCircle2, FileDown, Edit3, Database, Save, Trash2, X, Wifi, WifiOff, Loader2, AlertCircle } from 'lucide-react';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -24,23 +24,28 @@ export default function Builder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [savedCerts, setSavedCerts] = useState<any[]>([]);
   const [showDatabase, setShowDatabase] = useState(false);
-  const [showSavedToast, setShowSavedToast] = useState(false);
+  const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setDbStatus('connecting');
     const unsubscribe = onSnapshot(collection(db, 'diplomas'), (snapshot) => {
       const diplomas = snapshot.docs.map(doc => ({
         _dbId: doc.id,
         ...doc.data()
       }));
       setSavedCerts(diplomas.sort((a: any, b: any) => b.createdAt - a.createdAt));
+      setDbStatus('connected');
     }, (error) => {
       console.error("Firestore Error: ", error);
+      setDbStatus('error');
     });
     return () => unsubscribe();
   }, []);
 
   const handleSaveToDatabase = async () => {
+    setSaveStatus('saving');
     try {
       if (data._dbId) {
         await updateDoc(doc(db, 'diplomas', data._dbId), {
@@ -54,10 +59,12 @@ export default function Builder() {
         });
         setData({ ...data, _dbId: docRef.id });
       }
-      setShowSavedToast(true);
-      setTimeout(() => setShowSavedToast(false), 3000);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (e) {
       console.error(e);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 5000);
       alert("Xatolik yuz berdi");
     }
   };
@@ -427,12 +434,48 @@ export default function Builder() {
       {/* Preview Area */}
       <div className="flex-1 relative flex flex-col items-center justify-center space-y-8 bg-slate-100 p-8 overflow-hidden">
          <div className="absolute z-40 top-4 right-4 flex gap-2 items-center">
-           {showSavedToast && (
-             <span className="text-green-600 bg-green-50 px-3 py-1.5 rounded-md text-sm font-medium mr-2 animate-pulse">
+           {/* DB Connection Status */}
+           <div className="mr-2 flex items-center">
+             {dbStatus === 'connecting' && (
+               <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2.5 py-1.5 rounded-md text-sm font-medium">
+                 <Loader2 size={14} className="animate-spin" />
+                 Bazaga ulanmoqda...
+               </span>
+             )}
+             {dbStatus === 'connected' && (
+               <span className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2.5 py-1.5 rounded-md text-sm font-medium">
+                 <Wifi size={14} />
+                 Baza ulangan
+               </span>
+             )}
+             {dbStatus === 'error' && (
+               <span className="flex items-center gap-1.5 text-red-600 bg-red-50 px-2.5 py-1.5 rounded-md text-sm font-medium">
+                 <WifiOff size={14} />
+                 Ulanishda xatolik
+               </span>
+             )}
+           </div>
+
+           {/* Save Status */}
+           {saveStatus === 'saving' && (
+             <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-md text-sm font-medium mr-2">
+               <Loader2 size={14} className="animate-spin" />
+               Saqlanmoqda...
+             </span>
+           )}
+           {saveStatus === 'saved' && (
+             <span className="flex items-center gap-1.5 text-green-600 bg-green-50 px-3 py-1.5 rounded-md text-sm font-medium mr-2 animate-pulse">
+               <CheckCircle2 size={14} />
                Muvaffaqiyatli saqlandi!
              </span>
            )}
-           <button onClick={handleSaveToDatabase} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm text-sm font-semibold hover:bg-slate-50 transition-colors text-slate-700 hover:shadow-md">
+           {saveStatus === 'error' && (
+             <span className="flex items-center gap-1.5 text-red-600 bg-red-50 px-3 py-1.5 rounded-md text-sm font-medium mr-2">
+               <AlertCircle size={14} />
+               Saqlashda xatolik!
+             </span>
+           )}
+           <button onClick={handleSaveToDatabase} disabled={saveStatus === 'saving' || dbStatus !== 'connected'} className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm text-sm font-semibold hover:bg-slate-50 transition-colors text-slate-700 hover:shadow-md disabled:bg-slate-100 disabled:opacity-75 disabled:cursor-not-allowed">
              <Save size={16} /> Saqlash
            </button>
            <button onClick={() => setShowDatabase(true)} className="flex items-center gap-2 bg-slate-900 border border-slate-900 px-4 py-2 rounded-lg shadow-sm text-sm font-semibold hover:bg-slate-800 transition-colors hover:shadow-md text-white">
