@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: diplommental
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npx serve -s dist -l 3000
+    envVars:
+      - key: NODE_ENV
+        value: production
