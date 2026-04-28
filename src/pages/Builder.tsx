@@ -26,6 +26,7 @@ export default function Builder() {
   const [showDatabase, setShowDatabase] = useState(false);
   const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [isLocked, setIsLocked] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export default function Builder() {
         setData({ ...data, _dbId: docRef.id });
       }
       setSaveStatus('saved');
+      setIsLocked(true);
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (e) {
       console.error(e);
@@ -74,6 +76,15 @@ export default function Builder() {
     if(confirm("Ushbu diplomni o'chirib yuborishni xohlaysizmi?")) {
       try {
         await deleteDoc(doc(db, 'diplomas', id));
+        if (data._dbId === id) {
+           setData({
+              firstName: '', lastName: '', patronymic: '',
+              course: '', duration: '', date: new Date().toISOString().split('T')[0],
+              certId: generateRandomID(),
+              director: 'A. Alimov', secretary: 'S. Qodirova',
+           });
+           setIsLocked(false);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -82,6 +93,7 @@ export default function Builder() {
 
   const handleLoadFromDatabase = (cert: any) => {
     setData(cert);
+    setIsLocked(true);
     setShowDatabase(false);
   };
 
@@ -197,194 +209,233 @@ export default function Builder() {
             <p className="text-slate-500 text-sm">Ma'lumotlarni kiriting va diplomni yuklab oling.</p>
         </div>
         
-        <div className="space-y-4 mb-auto">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ism va Familiya</label>
-            <div className="flex gap-2 mb-2">
-              <input 
-                type="text" 
-                name="firstName" 
-                value={data.firstName}
-                onChange={handleChange}
-                placeholder="Ismi"
-                className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-              />
-              <input 
-                type="text" 
-                name="lastName" 
-                value={data.lastName}
-                onChange={handleChange}
-                placeholder="Familiyasi"
-                className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-              />
+        <div className="space-y-4 mb-auto relative">
+          {isLocked && (
+            <div className="absolute inset-0 z-10 bg-slate-50/50 backdrop-blur-[1px] flex flex-col items-center justify-center rounded-xl border border-slate-200">
+               <div className="bg-white p-4 rounded-lg shadow-lg text-center w-full max-w-[280px]">
+                 <CheckCircle2 className="mx-auto text-green-500 mb-2" size={32} />
+                 <h3 className="font-bold text-slate-800 mb-1">Diplom saqlandi</h3>
+                 <p className="text-xs text-slate-500 mb-4">Ushbu diplom bazaga saqlandi va tahrirlashdan bloklandi.</p>
+                 <div className="flex gap-2">
+                   <button 
+                     onClick={() => {
+                       setIsLocked(false);
+                     }}
+                     className="flex-1 bg-white border border-slate-300 text-slate-700 py-2 rounded font-medium text-sm hover:bg-slate-50 transition-colors"
+                   >
+                     Tahrirlash
+                   </button>
+                   <button 
+                     onClick={() => {
+                       setData({
+                         firstName: '', lastName: '', patronymic: '',
+                         course: '', duration: '', date: new Date().toISOString().split('T')[0],
+                         certId: generateRandomID(),
+                         director: 'A. Alimov', secretary: 'S. Qodirova',
+                       });
+                       setShowCyrillic(false);
+                       setIsLocked(false);
+                     }}
+                     className="flex-1 bg-slate-900 text-white py-2 rounded font-medium text-sm hover:bg-slate-800 transition-colors"
+                   >
+                     Yangi
+                   </button>
+                 </div>
+               </div>
             </div>
-            <input 
-              type="text" 
-              name="patronymic" 
-              value={data.patronymic}
-              onChange={handleChange}
-              placeholder="Otasining ismi"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kurs Yo'nalishi va Muddati</label>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                name="duration" 
-                value={data.duration}
-                onChange={handleChange}
-                placeholder="1 (bir) oylik"
-                className="w-1/3 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-              />
-              <input 
-                type="text" 
-                name="course" 
-                value={data.course}
-                onChange={handleChange}
-                placeholder="Mental arifmetika"
-                className="w-2/3 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sana</label>
-            <input 
-              type="date" 
-              name="date" 
-              value={data.date}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-            />
-          </div>
-          
-           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">ID Raqami</label>
-            <div className="flex gap-2">
-                <input 
-                type="text" 
-                name="certId" 
-                value={data.certId}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-                />
-                <button 
-                  onClick={() => setData({...data, certId: generateRandomID()})}
-                  className="px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-lg text-sm font-medium text-slate-800 transition-colors"
-                  title="Yangi ID yaratish"
-                >
-                  Yangi
-                </button>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rahbariyat</label>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                name="director" 
-                value={data.director}
-                onChange={handleChange}
-                placeholder="Direktor"
-                className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-              />
-              <input 
-                type="text" 
-                name="secretary" 
-                value={data.secretary}
-                onChange={handleChange}
-                placeholder="Kotib"
-                className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="flex items-center cursor-pointer mb-2">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 rounded text-slate-900 border-slate-300 focus:ring-slate-900"
-                checked={showCyrillic}
-                onChange={(e) => setShowCyrillic(e.target.checked)}
-              />
-              <span className="ml-2 text-sm font-medium text-slate-700 flex items-center gap-1">
-                 <Edit3 size={14} /> Kiril yozuvini qo'lda tahrirlash
-              </span>
-            </label>
-            
-            {showCyrillic && (
-              <div className="space-y-4 p-4 mt-2 bg-slate-50 rounded-xl border border-slate-200">
-                <div>
-                  <div className="flex gap-2 mb-2">
-                    <input 
-                      type="text" 
-                      name="firstNameCyr" 
-                      value={data.firstNameCyr !== undefined ? data.firstNameCyr : latToCyr(data.firstName)}
-                      onChange={handleChange}
-                      placeholder="Исми (Kiril)"
-                      className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
-                    />
-                    <input 
-                      type="text" 
-                      name="lastNameCyr" 
-                      value={data.lastNameCyr !== undefined ? data.lastNameCyr : latToCyr(data.lastName)}
-                      onChange={handleChange}
-                      placeholder="Фамилияси (Kiril)"
-                      className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
-                    />
-                  </div>
-                  <input 
-                    type="text" 
-                    name="patronymicCyr" 
-                    value={data.patronymicCyr !== undefined ? data.patronymicCyr : latToCyr(data.patronymic)}
-                    onChange={handleChange}
-                    placeholder="Отасининг исми (Kiril)"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm outline-none mb-2"
-                  />
-                </div>
+          )}
+          <fieldset disabled={isLocked} className={isLocked ? "opacity-40 blur-[1px] pointer-events-none transition-all duration-300" : "transition-all duration-300"}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ism va Familiya</label>
                 <div className="flex gap-2 mb-2">
                   <input 
                     type="text" 
-                    name="durationCyr" 
-                    value={data.durationCyr !== undefined ? data.durationCyr : latToCyr(data.duration)}
+                    name="firstName" 
+                    value={data.firstName}
                     onChange={handleChange}
-                    placeholder="1 (бир) ойлик"
-                    className="w-1/3 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                    placeholder="Ismi"
+                    className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
                   />
                   <input 
                     type="text" 
-                    name="courseCyr" 
-                    value={data.courseCyr !== undefined ? data.courseCyr : latToCyr(data.course)}
+                    name="lastName" 
+                    value={data.lastName}
                     onChange={handleChange}
-                    placeholder="Ментал арифметика"
-                    className="w-2/3 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                    placeholder="Familiyasi"
+                    className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
                   />
                 </div>
+                <input 
+                  type="text" 
+                  name="patronymic" 
+                  value={data.patronymic}
+                  onChange={handleChange}
+                  placeholder="Otasining ismi"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kurs Yo'nalishi va Muddati</label>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    name="directorCyr" 
-                    value={data.directorCyr !== undefined ? data.directorCyr : latToCyr(data.director || '')}
+                    name="duration" 
+                    value={data.duration}
                     onChange={handleChange}
-                    placeholder="Директор (Kiril)"
-                    className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                    placeholder="1 (bir) oylik"
+                    className="w-1/3 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
                   />
                   <input 
                     type="text" 
-                    name="secretaryCyr" 
-                    value={data.secretaryCyr !== undefined ? data.secretaryCyr : latToCyr(data.secretary || '')}
+                    name="course" 
+                    value={data.course}
                     onChange={handleChange}
-                    placeholder="Котиб (Kiril)"
-                    className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                    placeholder="Mental arifmetika"
+                    className="w-2/3 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
                   />
                 </div>
               </div>
-            )}
-          </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sana</label>
+                <input 
+                  type="date" 
+                  name="date" 
+                  value={data.date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
+                />
+              </div>
+              
+               <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">ID Raqami</label>
+                <div className="flex gap-2">
+                    <input 
+                    type="text" 
+                    name="certId" 
+                    value={data.certId}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setData({...data, certId: generateRandomID()})}
+                      className="px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-lg text-sm font-medium text-slate-800 transition-colors disabled:opacity-50"
+                      title="Yangi ID yaratish"
+                    >
+                      Yangi
+                    </button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rahbariyat</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    name="director" 
+                    value={data.director}
+                    onChange={handleChange}
+                    placeholder="Direktor"
+                    className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
+                  />
+                  <input 
+                    type="text" 
+                    name="secretary" 
+                    value={data.secretary}
+                    onChange={handleChange}
+                    placeholder="Kotib"
+                    className="w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-colors"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="flex items-center cursor-pointer mb-2">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded text-slate-900 border-slate-300 focus:ring-slate-900"
+                    checked={showCyrillic}
+                    onChange={(e) => setShowCyrillic(e.target.checked)}
+                  />
+                  <span className="ml-2 text-sm font-medium text-slate-700 flex items-center gap-1">
+                     <Edit3 size={14} /> Kiril yozuvini qo'lda tahrirlash
+                  </span>
+                </label>
+                
+                {showCyrillic && (
+                  <div className="space-y-4 p-4 mt-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <div>
+                      <div className="flex gap-2 mb-2">
+                        <input 
+                          type="text" 
+                          name="firstNameCyr" 
+                          value={data.firstNameCyr !== undefined ? data.firstNameCyr : latToCyr(data.firstName)}
+                          onChange={handleChange}
+                          placeholder="Исми (Kiril)"
+                          className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                        />
+                        <input 
+                          type="text" 
+                          name="lastNameCyr" 
+                          value={data.lastNameCyr !== undefined ? data.lastNameCyr : latToCyr(data.lastName)}
+                          onChange={handleChange}
+                          placeholder="Фамилияси (Kiril)"
+                          className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                        />
+                      </div>
+                      <input 
+                        type="text" 
+                        name="patronymicCyr" 
+                        value={data.patronymicCyr !== undefined ? data.patronymicCyr : latToCyr(data.patronymic)}
+                        onChange={handleChange}
+                        placeholder="Отасининг исми (Kiril)"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm outline-none mb-2"
+                      />
+                    </div>
+                    <div className="flex gap-2 mb-2">
+                      <input 
+                        type="text" 
+                        name="durationCyr" 
+                        value={data.durationCyr !== undefined ? data.durationCyr : latToCyr(data.duration)}
+                        onChange={handleChange}
+                        placeholder="1 (бир) ойлик"
+                        className="w-1/3 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                      />
+                      <input 
+                        type="text" 
+                        name="courseCyr" 
+                        value={data.courseCyr !== undefined ? data.courseCyr : latToCyr(data.course)}
+                        onChange={handleChange}
+                        placeholder="Ментал арифметика"
+                        className="w-2/3 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        name="directorCyr" 
+                        value={data.directorCyr !== undefined ? data.directorCyr : latToCyr(data.director || '')}
+                        onChange={handleChange}
+                        placeholder="Директор (Kiril)"
+                        className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                      />
+                      <input 
+                        type="text" 
+                        name="secretaryCyr" 
+                        value={data.secretaryCyr !== undefined ? data.secretaryCyr : latToCyr(data.secretary || '')}
+                        onChange={handleChange}
+                        placeholder="Котиб (Kiril)"
+                        className="w-1/2 px-3 py-2 border border-slate-300 rounded-md text-sm outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </fieldset>
         </div>
 
         <div className="mt-8 space-y-4">
