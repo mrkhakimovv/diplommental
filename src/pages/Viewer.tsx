@@ -16,6 +16,25 @@ export default function Viewer() {
   const [autoDownloaded, setAutoDownloaded] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
   const hiddenRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        // Padding/Margin allowance (32px padding)
+        const availableWidth = containerWidth - 10;
+        const newScale = Math.min(1, availableWidth / 1000);
+        setScale(newScale);
+      }
+    };
+    
+    // Slight delay to ensure DOM is ready
+    setTimeout(handleResize, 50);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [data]);
 
   useEffect(() => {
     const fetchCertificate = async () => {
@@ -200,13 +219,10 @@ export default function Viewer() {
           </div>
           
           <div className="flex gap-3 w-full md:w-auto">
-             <Link to="/" className="flex-1 md:flex-none px-6 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-full font-medium transition-shadow shadow-sm flex items-center justify-center gap-2">
-                <Home size={16} /> Yaratish
-             </Link>
              <button 
                 onClick={handleDownloadPDF}
                 disabled={isGenerating}
-                className="flex-1 md:flex-none px-6 py-2 bg-[#dc2626] border border-[#dc2626] hover:bg-[#b91c1c] text-white shadow-sm min-w-[180px] rounded-full font-medium transition-shadow flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed"
+                className="w-full px-6 py-2.5 bg-[#dc2626] border border-[#dc2626] hover:bg-[#b91c1c] text-white shadow-sm rounded-full font-medium transition-shadow flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed"
              >
                 {isGenerating ? (
                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -214,18 +230,6 @@ export default function Viewer() {
                    <FileDown size={16} />
                 )}
                 {isGenerating ? 'Yuklanmoqda...' : 'PDF yuklab olish'}
-             </button>
-             <button 
-                onClick={handleDownload}
-                disabled={isGenerating}
-                className="flex-1 md:flex-none px-6 py-2 bg-slate-900 border border-slate-900 hover:shadow-md text-white shadow-sm min-w-[180px] rounded-full font-medium transition-shadow flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed"
-             >
-                {isGenerating ? (
-                   <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                   <Download size={16} />
-                )}
-                {isGenerating ? 'Yuklanmoqda...' : 'PNG yuklab olish'}
              </button>
           </div>
        </div>
@@ -237,16 +241,35 @@ export default function Viewer() {
          </div>
        </div>
 
-       <div className="w-full flex justify-center py-6 px-4 overflow-hidden">
-          <div className="transform scale-[0.4] sm:scale-50 md:scale-[0.6] lg:scale-[0.8] xl:scale-90 origin-top shadow-2xl rounded-sm overflow-hidden bg-white">
-              <div style={{ width: 1000, height: 700 }}>
-                 <Certificate ref={certRef} {...data} />
-              </div>
-          </div>
+       <div className="w-full flex justify-center py-6 px-4" ref={containerRef}>
+          {data && (
+            <div 
+              style={{ 
+                width: `${1000 * scale}px`, 
+                height: `${700 * scale}px`,
+                position: 'relative'
+              }} 
+              className="shadow-2xl rounded-sm overflow-hidden bg-white mx-auto"
+            >
+               <div 
+                 style={{ 
+                   transform: `scale(${scale})`, 
+                   transformOrigin: 'top left',
+                   width: 1000, 
+                   height: 700,
+                   position: 'absolute',
+                   top: 0,
+                   left: 0
+                 }}
+               >
+                  <Certificate ref={certRef} {...data} />
+               </div>
+            </div>
+          )}
        </div>
 
-       <p className="text-slate-500 text-sm mt-8 mx-auto text-center max-w-lg">
-           Yuqoridagi "Yuklab Olish" tugmalari orqali ushbu diplomning asl nusxasini mobil qurilmangizga yoki kompyuteringizga PDF yoxud PNG formatida saqlab olishingiz mumkin.
+       <p className="text-slate-500 text-sm mt-6 mx-auto text-center max-w-lg px-4">
+           Ushbu diplomning asl nusxasini mobil qurilmangizga yoki kompyuteringizga PDF formatida saqlab olishingiz mumkin.
        </p>
     </div>
   );

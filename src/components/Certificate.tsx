@@ -75,6 +75,22 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
     const yearStr = String(parsedDate.getFullYear());
 
     const handwritingStyle = "font-handwriting absolute left-0 right-0 text-center whitespace-nowrap overflow-visible leading-none";
+    
+    // html2canvas bo'shliqlarni yo'qotadi
+    // Yechim: har bir so'zni alohida span ga o'rab, ular orasiga mustahkam bo'shliq qo'yamiz
+    const WordSpan = ({ text, className, style, gap = '0.3em' }: { text: string; className?: string; style?: React.CSSProperties; gap?: string }) => {
+      const words = (text || '').split(' ').filter(Boolean);
+      return (
+        <span className={className} style={{ ...style, display: className?.includes('absolute') ? undefined : 'inline' }}>
+          {words.map((word, i) => (
+            <React.Fragment key={i}>
+              <span style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>{word}</span>
+              {i < words.length - 1 && <span style={{ display: 'inline-block', width: gap, minWidth: gap, flexShrink: 0 }}>{' '}</span>}
+            </React.Fragment>
+          ))}
+        </span>
+      );
+    };
     const lineStyle = "border-b relative";
 
     const SealSVG = () => (
@@ -100,11 +116,11 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
         <div className="flex items-end mb-2 relative" style={{ zIndex: 10 }}>
             <span className="whitespace-nowrap mr-2 text-[13px]" style={{ color: '#334155' }}>Mazkur diplom egasi</span>
             <div className={`flex-1 text-center h-8 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>{lastName}</span>
+                <WordSpan text={lastName} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
             </div>
         </div>
         <div className={`text-center h-[34px] mb-1 relative ${lineStyle}`} style={{ zIndex: 10, borderColor: '#718096' }}>
-             <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>{firstName} {patronymic}</span>
+             <WordSpan text={`${firstName} ${patronymic}`} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
         </div>
         <div className="text-center text-[10px] mb-8 font-sans" style={{ color: '#64748b' }}>(familiyasi, ismi, otasining ismi)</div>
 
@@ -114,17 +130,17 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
              </div>
              <div className="flex items-center justify-center w-full mt-1">
                  <div className={`px-2 min-w-[200px] h-8 relative ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                     <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>{duration}</span>
+                     <WordSpan text={duration} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
                  </div>
-                 <span className="ml-2 font-semibold">muddatli kursi dasturini</span>
+                 <WordSpan text="muddatli kursi dasturini" className="ml-2 font-semibold" gap="0.28em" />
              </div>
              <div className="flex items-center justify-center w-full mt-2">
                  <div className={`px-4 w-[350px] h-8 relative ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                     <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>{course}</span>
+                     <WordSpan text={course} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
                  </div>
              </div>
              <div className="mt-2 text-center w-full font-semibold">
-                 bo'yicha muvaffaqiyatli yakunladi
+                 <WordSpan text="bo'yicha muvaffaqiyatli yakunladi" gap="0.28em" />
              </div>
         </div>
 
@@ -139,13 +155,13 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Direktor:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{director}</span>
+                         <WordSpan text={director} className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }} />
                      </div>
                  </div>
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Kotib:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{secretary}</span>
+                         <WordSpan text={secretary} className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }} />
                      </div>
                  </div>
              </div>
@@ -189,13 +205,11 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
         <div className="flex items-end mb-2 relative" style={{ zIndex: 10 }}>
             <span className="whitespace-nowrap mr-2 text-[13px]" style={{ color: '#334155' }}>Мазкур диплом эгаси</span>
             <div className={`flex-1 text-center h-8 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>{typeof lastNameCyr === 'string' && lastNameCyr.trim() !== '' ? lastNameCyr : latToCyr(lastName)}</span>
+                <WordSpan text={typeof lastNameCyr === 'string' && lastNameCyr.trim() !== '' ? lastNameCyr : latToCyr(lastName)} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
             </div>
         </div>
         <div className={`text-center h-[34px] mb-1 relative ${lineStyle}`} style={{ zIndex: 10, borderColor: '#718096' }}>
-             <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>
-                {typeof firstNameCyr === 'string' && firstNameCyr.trim() !== '' ? firstNameCyr : latToCyr(firstName)} {typeof patronymicCyr === 'string' && patronymicCyr.trim() !== '' ? patronymicCyr : latToCyr(patronymic)}
-             </span>
+             <WordSpan text={`${typeof firstNameCyr === 'string' && firstNameCyr.trim() !== '' ? firstNameCyr : latToCyr(firstName)} ${typeof patronymicCyr === 'string' && patronymicCyr.trim() !== '' ? patronymicCyr : latToCyr(patronymic)}`} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
         </div>
         <div className="text-center text-[10px] mb-8 font-sans" style={{ color: '#64748b' }}>(фамилияси, исми, отасининг исми)</div>
 
@@ -205,17 +219,17 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
              </div>
              <div className="flex items-center justify-center w-full mt-1">
                  <div className={`px-2 min-w-[200px] h-8 relative ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                     <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>{typeof durationCyr === 'string' && durationCyr.trim() !== '' ? durationCyr : latToCyr(duration)}</span>
+                     <WordSpan text={typeof durationCyr === 'string' && durationCyr.trim() !== '' ? durationCyr : latToCyr(duration)} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
                  </div>
-                 <span className="ml-2 font-semibold">муддатли курси дастурини</span>
+                 <WordSpan text="муддатли курси дастурини" className="ml-2 font-semibold" gap="0.28em" />
              </div>
              <div className="flex items-center justify-center w-full mt-2">
                  <div className={`px-4 w-[350px] h-8 relative ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                     <span className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }}>{typeof courseCyr === 'string' && courseCyr.trim() !== '' ? courseCyr : latToCyr(course)}</span>
+                     <WordSpan text={typeof courseCyr === 'string' && courseCyr.trim() !== '' ? courseCyr : latToCyr(course)} className={`${handwritingStyle} text-[36px]`} style={{ color: '#2c5282', bottom: '10px' }} />
                  </div>
              </div>
              <div className="mt-2 text-center w-full font-semibold">
-                 бўйича муваффақиятли якунлади
+                 <WordSpan text="бўйича муваффақиятли якунлади" gap="0.28em" />
              </div>
         </div>
 
@@ -226,13 +240,13 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Директор:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{typeof directorCyr === 'string' && directorCyr.trim() !== '' ? directorCyr : latToCyr(director)}</span>
+                         <WordSpan text={typeof directorCyr === 'string' && directorCyr.trim() !== '' ? directorCyr : latToCyr(director)} className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }} />
                      </div>
                  </div>
                  <div className="flex items-end">
                      <span className="w-[60px]" style={{ color: '#1e293b' }}>Котиб:</span>
                      <div className={`flex-1 mx-2 text-center h-6 ${lineStyle}`} style={{ borderColor: '#718096' }}>
-                         <span className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }}>{typeof secretaryCyr === 'string' && secretaryCyr.trim() !== '' ? secretaryCyr : latToCyr(secretary)}</span>
+                         <WordSpan text={typeof secretaryCyr === 'string' && secretaryCyr.trim() !== '' ? secretaryCyr : latToCyr(secretary)} className={`${handwritingStyle} text-[26px]`} style={{ color: '#2c5282', bottom: '6px' }} />
                      </div>
                  </div>
              </div>
@@ -278,4 +292,3 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
 );
 
 Certificate.displayName = 'Certificate';
-
