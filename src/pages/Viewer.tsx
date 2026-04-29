@@ -15,6 +15,7 @@ export default function Viewer() {
   const [isLoading, setIsLoading] = useState(true);
   const [autoDownloaded, setAutoDownloaded] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
+  const hiddenRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCertificate = async () => {
@@ -67,20 +68,18 @@ export default function Viewer() {
     fetchCertificate();
   }, [searchParams, id]);
 
-
   const handleDownload = async () => {
-    if (certRef.current && data) {
+    if (hiddenRef.current && data) {
       setIsGenerating(true);
       try {
         await document.fonts.ready;
-        await new Promise(r => setTimeout(r, 100));
-        const canvas = await html2canvas(certRef.current, { 
-          scale: 3, 
+        await new Promise(r => setTimeout(r, 500));
+        const canvas = await html2canvas(hiddenRef.current, { 
+          scale: 3,
           useCORS: true,
-          onclone: (clonedDoc, clonedEl) => {
-            clonedEl.style.transform = 'none';
-            clonedEl.style.width = 'auto';
-            clonedEl.style.height = 'auto';
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          onclone: (clonedDoc) => {
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
               (el as HTMLElement).style.transform = 'translateY(-0.35em)';
@@ -101,18 +100,17 @@ export default function Viewer() {
   };
 
   const handleDownloadPDF = async () => {
-    if (certRef.current && data) {
+    if (hiddenRef.current && data) {
       setIsGenerating(true);
       try {
         await document.fonts.ready;
-        await new Promise(r => setTimeout(r, 100));
-        const canvas = await html2canvas(certRef.current, { 
-          scale: 3, 
+        await new Promise(r => setTimeout(r, 500));
+        const canvas = await html2canvas(hiddenRef.current, { 
+          scale: 3,
           useCORS: true,
-          onclone: (clonedDoc, clonedEl) => {
-            clonedEl.style.transform = 'none';
-            clonedEl.style.width = 'auto';
-            clonedEl.style.height = 'auto';
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          onclone: (clonedDoc) => {
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
               (el as HTMLElement).style.transform = 'translateY(-0.35em)';
@@ -225,6 +223,13 @@ export default function Viewer() {
                 {isGenerating ? 'Yuklanmoqda...' : 'PNG yuklab olish'}
              </button>
           </div>
+       </div>
+
+       {/* Yashirin to'liq o'lchamli diplom — faqat PDF/PNG uchun */}
+       <div style={{ position: 'absolute', left: '-9999px', top: 0, width: 1000, height: 700, overflow: 'hidden' }}>
+         <div ref={hiddenRef} style={{ width: 1000, height: 700 }}>
+           {data && <Certificate {...data} />}
+         </div>
        </div>
 
        <div className="w-full flex justify-center py-6 px-4 overflow-hidden">
