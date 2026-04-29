@@ -28,6 +28,7 @@ export default function Builder() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [isLocked, setIsLocked] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
+  const hiddenRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDbStatus('connecting');
@@ -103,21 +104,22 @@ export default function Builder() {
   };
 
   const handleDownload = async () => {
-    if (certRef.current) {
+    if (hiddenRef.current) {
       setIsGenerating(true);
       try {
         await document.fonts.ready;
-        await new Promise(r => setTimeout(r, 100));
-        const canvas = await html2canvas(certRef.current, { 
+        await new Promise(r => setTimeout(r, 500));
+        const canvas = await html2canvas(hiddenRef.current, { 
           scale: 3, 
           useCORS: true,
-          onclone: (clonedDoc, clonedEl) => {
-            clonedEl.style.transform = 'none';
-            clonedEl.style.width = 'auto';
-            clonedEl.style.height = 'auto';
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          onclone: (clonedDoc) => {
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
               (el as HTMLElement).style.transform = 'translateY(-0.35em)';
+              (el as HTMLElement).style.wordSpacing = '0.15em'; 
+              (el as HTMLElement).style.letterSpacing = '0.01em';
             });
           }
         });
@@ -135,21 +137,22 @@ export default function Builder() {
   };
 
   const handleDownloadPDF = async () => {
-    if (certRef.current) {
+    if (hiddenRef.current) {
       setIsGenerating(true);
       try {
         await document.fonts.ready;
-        await new Promise(r => setTimeout(r, 100));
-        const canvas = await html2canvas(certRef.current, { 
+        await new Promise(r => setTimeout(r, 500));
+        const canvas = await html2canvas(hiddenRef.current, { 
           scale: 3, 
           useCORS: true,
-          onclone: (clonedDoc, clonedEl) => {
-            clonedEl.style.transform = 'none';
-            clonedEl.style.width = 'auto';
-            clonedEl.style.height = 'auto';
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          onclone: (clonedDoc) => {
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
               (el as HTMLElement).style.transform = 'translateY(-0.35em)';
+              (el as HTMLElement).style.wordSpacing = '0.15em'; 
+              (el as HTMLElement).style.letterSpacing = '0.01em';
             });
           }
         });
@@ -212,7 +215,17 @@ export default function Builder() {
       <div className="w-full md:w-1/3 bg-white border-r border-slate-200 p-8 flex flex-col justify-between overflow-y-auto shrink-0 z-10">
         <div className="mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-1">Diplom Generator</h2>
-            <p className="text-slate-500 text-sm">Ma'lumotlarni kiriting va diplomni yuklab oling.</p>
+            <p className="text-slate-500 text-sm mb-4">Ma'lumotlarni kiriting va diplomni yuklab oling.</p>
+            
+            {/* DB Connection Status Banner */}
+            <div className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-colors ${dbStatus === 'connected' ? 'bg-blue-50 border-blue-100 text-blue-700' : dbStatus === 'connecting' ? 'bg-amber-50 border-amber-100 text-amber-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+              <div className="shrink-0 flex items-center justify-center">
+                {dbStatus === 'connected' ? <Wifi size={18} /> : dbStatus === 'connecting' ? <Loader2 size={18} className="animate-spin" /> : <WifiOff size={18} />}
+              </div>
+              <div className="flex-1">
+                {dbStatus === 'connected' ? 'Baza bilan aloqa o\'rnatildi' : dbStatus === 'connecting' ? 'Bazaga ulanmoqda...' : 'Baza bilan aloqa yo\'q! Aloqani tekshiring.'}
+              </div>
+            </div>
         </div>
         
         <div className="space-y-4 mb-auto relative">
@@ -542,7 +555,14 @@ export default function Builder() {
 
          <div className="w-full flex justify-center pb-8 overflow-x-auto items-center min-h-[750px] px-4 pt-16">
             <div className="transform scale-[0.4] sm:scale-50 md:scale-[0.6] lg:scale-[0.8] xl:scale-90 origin-center transition-transform">
-               {/* Fixed dimensions ensure standard print quality */}
+               {/* Yashirin to'liq o'lchamli diplom — faqat PDF/PNG uchun */}
+               <div style={{ position: 'absolute', left: '-9999px', top: 0, width: 1000, height: 700, overflow: 'hidden' }}>
+                 <div ref={hiddenRef} style={{ width: 1000, height: 700 }}>
+                   <Certificate {...data} />
+                 </div>
+               </div>
+
+               {/* Ekrandagi ko'rinish */}
                <div style={{ width: '1000px', height: '700px' }}>
                   <Certificate ref={certRef} {...data} />
                </div>

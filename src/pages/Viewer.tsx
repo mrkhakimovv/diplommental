@@ -68,6 +68,7 @@ export default function Viewer() {
     fetchCertificate();
   }, [searchParams, id]);
 
+
   const handleDownload = async () => {
     if (hiddenRef.current && data) {
       setIsGenerating(true);
@@ -82,7 +83,9 @@ export default function Viewer() {
           onclone: (clonedDoc) => {
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
-              (el as HTMLElement).style.transform = 'translateY(-0.35em)';
+              (el as HTMLElement).style.transform = 'translateY(-0.35em)'; 
+              (el as HTMLElement).style.wordSpacing = '0.15em'; 
+              (el as HTMLElement).style.letterSpacing = '0.01em';
             });
           }
         });
@@ -113,7 +116,9 @@ export default function Viewer() {
           onclone: (clonedDoc) => {
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
-              (el as HTMLElement).style.transform = 'translateY(-0.35em)';
+              (el as HTMLElement).style.transform = 'translateY(-0.35em)'; 
+              (el as HTMLElement).style.wordSpacing = '0.15em'; 
+              (el as HTMLElement).style.letterSpacing = '0.01em';
             });
           }
         });
