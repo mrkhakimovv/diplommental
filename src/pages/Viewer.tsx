@@ -75,9 +75,12 @@ export default function Viewer() {
         await document.fonts.ready;
         await new Promise(r => setTimeout(r, 100));
         const canvas = await html2canvas(certRef.current, { 
-          scale: 2, 
+          scale: 3, 
           useCORS: true,
-          onclone: (clonedDoc) => {
+          onclone: (clonedDoc, clonedEl) => {
+            clonedEl.style.transform = 'none';
+            clonedEl.style.width = 'auto';
+            clonedEl.style.height = 'auto';
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
               (el as HTMLElement).style.transform = 'translateY(-0.35em)';
@@ -104,9 +107,12 @@ export default function Viewer() {
         await document.fonts.ready;
         await new Promise(r => setTimeout(r, 100));
         const canvas = await html2canvas(certRef.current, { 
-          scale: 2, 
+          scale: 3, 
           useCORS: true,
-          onclone: (clonedDoc) => {
+          onclone: (clonedDoc, clonedEl) => {
+            clonedEl.style.transform = 'none';
+            clonedEl.style.width = 'auto';
+            clonedEl.style.height = 'auto';
             const elements = clonedDoc.querySelectorAll('.font-handwriting');
             elements.forEach(el => {
               (el as HTMLElement).style.transform = 'translateY(-0.35em)';
