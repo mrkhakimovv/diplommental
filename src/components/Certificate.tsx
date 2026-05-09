@@ -281,9 +281,8 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateData>(
       <div
         ref={ref}
         className="w-[1000px] h-[700px] shadow-2xl flex font-sans gap-2 p-2 relative"
-        style={{ backgroundColor: '#c8102e', borderRadius: '4px' }}
+        style={{ backgroundColor: '#ffffff', borderRadius: '4px' }}
       >
-         <div className="absolute top-0 bottom-0 left-1/2 w-4 -translate-x-1/2 pointer-events-none" style={{ zIndex: 0, backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.2), rgba(0,0,0,0))' }}></div>
          {renderLeftPage()}
          {renderRightPage()}
       </div>
