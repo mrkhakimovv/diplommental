@@ -179,27 +179,9 @@ export default function Builder() {
   };
 
   const handleShare = () => {
-    const params: Record<string, string> = {};
-    if (data.firstName) params.firstName = data.firstName;
-    if (data.lastName) params.lastName = data.lastName;
-    if (data.patronymic) params.patronymic = data.patronymic;
-    if (data.course) params.course = data.course;
-    if (data.duration) params.duration = data.duration;
-    if (data.date) params.date = data.date;
-    if (data.certId) params.certId = data.certId;
-    if (data.firstNameCyr) params.firstNameCyr = data.firstNameCyr;
-    if (data.lastNameCyr) params.lastNameCyr = data.lastNameCyr;
-    if (data.patronymicCyr) params.patronymicCyr = data.patronymicCyr;
-    if (data.courseCyr) params.courseCyr = data.courseCyr;
-    if (data.durationCyr) params.durationCyr = data.durationCyr;
-    if (data.director) params.director = data.director;
-    if (data.secretary) params.secretary = data.secretary;
-    if (data.directorCyr) params.directorCyr = data.directorCyr;
-    if (data.secretaryCyr) params.secretaryCyr = data.secretaryCyr;
-
-    const queryParams = new URLSearchParams(params);
-    const origin = process.env.APP_URL || window.location.origin;
-    const url = `${origin}/view?${queryParams.toString()}`;
+    if (!data._dbId) return;
+    const origin = process.env.APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'https://diplom.app');
+    const url = `${origin}/view/${data._dbId}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -460,7 +442,7 @@ export default function Builder() {
         <div className="mt-8 space-y-4">
           <button 
              onClick={handleDownloadPDF}
-             disabled={isGenerating}
+             disabled={isGenerating || !isLocked}
              className="w-full flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-[#b91c1c] text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
           >
             {isGenerating ? (
@@ -473,7 +455,7 @@ export default function Builder() {
 
           <button 
              onClick={handleDownload}
-             disabled={isGenerating}
+             disabled={isGenerating || !isLocked}
              className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
           >
             {isGenerating ? (
@@ -486,11 +468,19 @@ export default function Builder() {
           
           <button 
              onClick={handleShare}
-             className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:shadow-md text-slate-700 py-3 rounded-lg font-semibold transition-shadow shadow-sm"
+             disabled={!isLocked}
+             className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:shadow-md text-slate-700 py-3 rounded-lg font-semibold transition-shadow shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {copiedLink ? <CheckCircle2 size={18} className="text-green-600" /> : <Share2 size={18} />} 
             {copiedLink ? "Link nusxalandi!" : "Ulashish uchun link olinishi"}
           </button>
+          
+          {!isLocked && (
+             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+                 <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={16} />
+                 <p className="text-xs text-amber-700">Yuklab olishdan oldin diplomni bazaga <strong>Saqlang!</strong></p>
+             </div>
+          )}
           
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
             <p className="text-xs text-slate-500 leading-relaxed">

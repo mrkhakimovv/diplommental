@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Certificate, CertificateData } from '../components/Certificate';
 import { Download, AlertCircle, Home, FileCheck2, FileDown } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export default function Viewer() {
@@ -55,6 +55,22 @@ export default function Viewer() {
           setIsLoading(false);
         }
       } else {
+        const certIdParam = searchParams.get('certId');
+        if (certIdParam) {
+           setIsLoading(true);
+           try {
+              const q = query(collection(db, 'diplomas'), where('certId', '==', certIdParam));
+              const querySnapshot = await getDocs(q);
+              if (!querySnapshot.empty) {
+                setData(querySnapshot.docs[0].data() as CertificateData);
+                setIsLoading(false);
+                return;
+              }
+           } catch (error) {
+              console.error("Error fetching by certId:", error);
+           }
+        }
+
         const checkData: CertificateData = {
           firstName: searchParams.get('firstName') || '',
           lastName: searchParams.get('lastName') || '',
